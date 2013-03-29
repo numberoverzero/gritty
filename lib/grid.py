@@ -102,7 +102,7 @@ class Grid(object):
         pos_x, pos_y = pos
 
         if pos_x < 0 or pos_y < 0:
-                    return None
+            return None
 
         if pos_x > width or pos_y > height:
             return None
@@ -126,13 +126,16 @@ class Grid(object):
     def get_color_at(self, pos):
         '''Gets the color at a position'''
         pos = self._index(pos)
-        return self._cells[pos]
+        val = self._cells[pos]
+        if val:
+            return list(val)
+        return None
 
     def set_color_at(self, pos, value):
         '''Sets the color at a position'''
         index = self._index(pos)
         old_value = self.get_color_at(pos)
-        self._cells[index] = tuple(value)
+        self._cells[index] = list(value)
         if not old_value or not color_eq(value, old_value):
             self._dirty.append(pos)
 
@@ -140,7 +143,7 @@ class Grid(object):
         for pair in itertools.product(range(self._rows), range(self._columns)):
             yield pair[::-1]
 
-    def __getitem__(self, x, y):
+    def __getitem__(self, (x, y)):
         if isinstance(x, slice):
             xs = range(*x.indices(self._columns))
         else:
