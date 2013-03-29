@@ -11,6 +11,10 @@ def rrect(surface, color, rect, radius, width):
     rect is of the form (x, y, width, height) where x, y is the position of the upper left corner
     radius is the curvature of the corners
     '''
+    if radius == 0:
+        pygame.draw.rect(surface, color, rect, 0)
+        return
+
     if color[0] + color[1] + color[2] == 0:
         colorkey = (1, 1, 1)
     else:
