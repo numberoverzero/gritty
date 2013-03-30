@@ -1,6 +1,7 @@
 import itertools
 import pygame
 from cell_collection import Cell, CellCollection
+from notify_dict import NotifiableDict
 
 DEFAULT_CELL_COLOR = (0, 0, 0, 255)
 DEFAULT_BORDER_COLOR = (0, 0, 0, 255)
@@ -40,27 +41,34 @@ class Grid(object):
         self._cell_height = cell_height
         self._cell_border_size = kwargs.get('cell_border_size', DEFAULT_BORDER_SIZE)
 
-        self._cell_attributes = {
-            'color': kwargs.get('cell_color_default', DEFAULT_CELL_COLOR),
-            'radius': kwargs.get('cell_radius', DEFAULT_CELL_RADIUS),
-            'border_color': kwargs.get('cell_border_color', DEFAULT_BORDER_COLOR)
-        }
+        self.cell_attr = NotifiableDict(
+            {'color': kwargs.get('cell_color_default', DEFAULT_CELL_COLOR),
+             'radius': kwargs.get('cell_radius', DEFAULT_CELL_RADIUS),
+             'border_color': kwargs.get('cell_border_color', DEFAULT_BORDER_COLOR)
+             }
+        )
+        self.cell_attr.set_notify_func(lambda *a, **kw: self.force_redraw())
 
         self._cells = {}
         self._dirty = []
-        self._forced_redraw = False
         self.force_redraw()
+        self.surface
 
     @property
     def render_dimensions(self):
-        width = self._columns * self._cell_width + (self._columns + 1) * self._cell_border_size
-        height = self._rows * self._cell_height + (self._rows + 1) * self._cell_border_size
+        width = self._columns * self.cell_width + (self._columns + 1) * self.cell_border_size
+        height = self._rows * self.cell_height + (self._rows + 1) * self.cell_border_size
         return width, height
 
     @property
     def surface(self):
-        if self._dirty:
+        if self._forced_redraw:
+            self._surf_cache = pygame.Surface(self.render_dimensions, pygame.SRCALPHA)
             self._forced_redraw = False
+            self._dirty = []
+            for cell in self:
+                cell.draw(self._surf_cache)
+        elif self._dirty:
             for cell in self._dirty:
                 cell.draw(self._surf_cache)
             self._dirty = []
@@ -95,20 +103,20 @@ class Grid(object):
 
     def hit_check(self, pos):
         '''Returns the cell pos that contains pos, or None'''
-        width = self.cell_width
-        height = self.cell_height
-        border = self.cell_border_size
-        width, height = self.render_dimensions
+        grid_width, grid_height = self.render_dimensions
         pos_x, pos_y = pos
 
         if pos_x < 0 or pos_y < 0:
             return None
 
-        if pos_x > width or pos_y > height:
+        if pos_x > grid_width or pos_y > grid_height:
             return None
 
-        x, rx = divmod(pos_x, width + border)
-        y, ry = divmod(pos_y, height + border)
+        cell_width, cell_height = self.cell_width, self.cell_height
+        border = self.cell_border_size
+
+        x, rx = divmod(pos_x, cell_width + border)
+        y, ry = divmod(pos_y, cell_height + border)
         if rx <= border or ry <= border:
             return None
         return x, y
@@ -118,13 +126,10 @@ class Grid(object):
         self._dirty.append(cell)
 
     def force_redraw(self):
-        if not self._forced_redraw:
-            self._surf_cache = pygame.Surface(self.render_dimensions, pygame.SRCALPHA)
-            for cell in self:
-                self.update_cell(cell)
+        self._forced_redraw = True
 
     def cell_at(self, pos):
-        return self._cells.get(pos, Cell(self, pos, self._cell_attributes))
+        return self._cells.get(pos, Cell(self, pos, self.cell_attr))
 
     def set_cell_attr(self, name, value):
         self._cell_attributes[name] = value
