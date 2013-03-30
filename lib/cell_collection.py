@@ -5,8 +5,11 @@ class Cell(object):
     def __init__(self, grid, pos, attrs):
         self.grid = grid
         self.pos = pos
+        #This way setting default values won't inject the cell into the grid's cache
+        self._suppress_updates = True
         for name, value in attrs.iteritems():
             setattr(self, name, value)
+        self._suppress_updates = False
 
     @property
     def _rect(self):
@@ -39,9 +42,10 @@ class Cell(object):
     def __setattr__(self, name, value):
         if name == 'grid':
             object.__setattr__(self, name, value)
-        elif self.grid.has_cell_attr(name):
+        elif name in self.grid.cell_attr:
             object.__setattr__(self, name, value)
-            self.grid.update_cell(self)
+            if not self._suppress_updates:
+                self.grid.update_cell(self)
         else:
             object.__setattr__(self, name, value)
 
