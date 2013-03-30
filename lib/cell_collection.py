@@ -11,16 +11,16 @@ class Cell(object):
     @property
     def _rect(self):
         '''Returns the (x, y, width, height) rectangle of the given cell'''
-        border_size = self.grid.get_global_attribute('cell_border_size')
-        width = self.grid.get_global_attribute('cell_width')
-        height = self.grid.get_global_attribute('cell_height')
+        border_size = self.grid.cell_border_size
+        width = self.grid.cell_width
+        height = self.grid.cell_height
         x, y = self.pos
         x = border_size * (1 + x) + width * x
         y = border_size * (1 + y) + height * y
         return [x, y, width, height]
 
     def draw(self, surface):
-        border_size = self.grid.get_global_attribute('cell_border_size')
+        border_size = self.grid.cell_border_size
         border_color = self.border_color
 
         #Border
@@ -39,7 +39,7 @@ class Cell(object):
     def __setattr__(self, name, value):
         if name == 'grid':
             object.__setattr__(self, name, value)
-        elif self.grid.has_cell_attribute(name):
+        elif self.grid.has_cell_attr(name):
             object.__setattr__(self, name, value)
             self.grid.update_cell(self)
         else:

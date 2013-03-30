@@ -36,11 +36,9 @@ class Grid(object):
         self._rows = rows
         self._columns = columns
 
-        self._global_attributes = {
-            'cell_width': cell_width,
-            'cell_height': cell_height,
-            'cell_border_size': kwargs.get('cell_border_size', DEFAULT_BORDER_SIZE)
-        }
+        self._cell_width = cell_width
+        self._cell_height = cell_height
+        self._cell_border_size = kwargs.get('cell_border_size', DEFAULT_BORDER_SIZE)
 
         self._cell_attributes = {
             'color': kwargs.get('cell_color_default', DEFAULT_CELL_COLOR),
@@ -50,17 +48,13 @@ class Grid(object):
 
         self._cells = {}
         self._dirty = []
-        self._surf_cache = pygame.Surface(self.render_dimensions, pygame.SRCALPHA)
         self._forced_redraw = False
         self.force_redraw()
 
     @property
     def render_dimensions(self):
-        cell_width = self.get_global_attribute('cell_width')
-        cell_height = self.get_global_attribute('cell_height')
-        border_size = self.get_global_attribute('cell_border_size')
-        width = self._columns * cell_width + (self._columns + 1) * border_size
-        height = self._rows * cell_height + (self._rows + 1) * border_size
+        width = self._columns * self._cell_width + (self._columns + 1) * self._cell_border_size
+        height = self._rows * self._cell_height + (self._rows + 1) * self._cell_border_size
         return width, height
 
     @property
@@ -72,11 +66,39 @@ class Grid(object):
             self._dirty = []
         return self._surf_cache
 
+    @property
+    def cell_width(self):
+        return self._cell_width
+
+    @cell_width.setter
+    def cell_width(self, value):
+        self._cell_width = value
+        self.force_redraw()
+
+    @property
+    def cell_height(self):
+        return self._cell_height
+
+    @cell_height.setter
+    def cell_height(self, value):
+        self._cell_height = value
+        self.force_redraw()
+
+    @property
+    def cell_border_size(self):
+        return self._cell_border_size
+
+    @cell_border_size.setter
+    def cell_border_size(self, value):
+        self._cell_border_size = value
+        self.force_redraw()
+
     def hit_check(self, pos):
         '''Returns the cell pos that contains pos, or None'''
-        cell_width, cell_height = self._cell_width, self._cell_height
+        width = self.cell_width
+        height = self.cell_height
+        border = self.cell_border_size
         width, height = self.render_dimensions
-        border_size = self._border_size
         pos_x, pos_y = pos
 
         if pos_x < 0 or pos_y < 0:
@@ -85,9 +107,9 @@ class Grid(object):
         if pos_x > width or pos_y > height:
             return None
 
-        x, rx = divmod(pos_x, cell_width + border_size)
-        y, ry = divmod(pos_y, cell_height + border_size)
-        if rx <= border_size or ry <= border_size:
+        x, rx = divmod(pos_x, width + border)
+        y, ry = divmod(pos_y, height + border)
+        if rx <= border or ry <= border:
             return None
         return x, y
 
@@ -97,32 +119,22 @@ class Grid(object):
 
     def force_redraw(self):
         if not self._forced_redraw:
+            self._surf_cache = pygame.Surface(self.render_dimensions, pygame.SRCALPHA)
             for cell in self:
                 self.update_cell(cell)
 
     def cell_at(self, pos):
         return self._cells.get(pos, Cell(self, pos, self._cell_attributes))
 
-    def set_cell_attribute_default(self, name, default):
-        self._cell_attributes[name] = default
+    def set_cell_attr(self, name, value):
+        self._cell_attributes[name] = value
         self.force_redraw()
 
-    def get_cell_attribute_default(self, name):
+    def get_cell_attr(self, name):
         return self._cell_attributes[name]
 
-    def has_cell_attribute(self, name):
+    def has_cell_attr(self, name):
         return name in self._cell_attributes
-
-    def set_global_attribute(self, name, value):
-        self._global_attributes[name] = value
-        self.force_redraw()
-
-    def get_global_attribute(self, name):
-        return self._global_attributes[name]
-
-    def del_global_attribute(self, name):
-        del self._global_attributes[name]
-        self.force_redraw()
 
     def __iter__(self):
         for revpos in itertools.product(range(self._rows), range(self._columns)):
