@@ -17,8 +17,8 @@ args = [
 
 kwargs = {
     'cell_color_default': COLOR_OFF,
-    'border_color': (000, 000, 000, 255),
-    'border_size': 5,
+    'cell_border_color': (000, 000, 000, 255),
+    'cell_border_size': 5,
     'cell_radius': 0,
 }
 

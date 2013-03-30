@@ -17,8 +17,8 @@ args = [
 
 kwargs = {
     'cell_color_default': COLOR_OFF,
-    'border_color': (000, 000, 000),
-    'border_size': 3,
+    'cell_border_color': (000, 000, 000),
+    'cell_border_size': 3,
     'cell_radius': 5,
 }
 
@@ -103,7 +103,7 @@ while True:
     if new_pos:
         update_selected(new_pos)
     pygame.display.update()
-    pygame.time.delay(40)
+    pygame.time.delay(29)
 
 
 pygame.quit()
