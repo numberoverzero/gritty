@@ -3,20 +3,10 @@ import pygame
 from gritty.padlib import rrect
 from cell_collection import CellCollection
 
-DEFAULT_OFF_COLOR = (0, 0, 0, 255)
-DEFAULT_ON_COLOR = (255, 255, 255, 255)
+DEFAULT_CELL_COLOR = (0, 0, 0, 255)
 DEFAULT_BORDER_COLOR = (0, 0, 0, 255)
 DEFAULT_BORDER_SIZE = 0
 DEFAULT_CELL_RADIUS = 0
-
-
-def color_eq(color1, color2):
-    if len(color1) != len(color2):
-        return False
-    for c1, c2 in zip(color1, color2):
-        if c1 != c2:
-            return False
-    return True
 
 
 class Grid(object):
@@ -26,20 +16,21 @@ class Grid(object):
         columns:: the number of columns in the grid
 
         keyword arguments:
-        color_cell_on  :: color used when a cell is set to 'on'
-        color_cell_off :: color used when a cell is set to 'off'
-        color_border   :: border color for the grid (exterior edges and border between cells)
+        cell_color_default :: default color a cell is rendered with
+        border_color   :: border color for the grid (exterior edges and border between cells)
 
         border_size    :: thickness of the border
         cell_radius    :: curvature of the cell corners.  Use 0 for square corners
         '''
         self._rows = rows
         self._columns = columns
-        self._cells = [None] * rows * columns
+        self._cells = {}
 
-        self._color_cell_off = kwargs.get('color_cell_off', DEFAULT_OFF_COLOR)
-        self._color_cell_on = kwargs.get('color_cell_on', DEFAULT_ON_COLOR)
-        self._color_border = kwargs.get('color_border', DEFAULT_BORDER_COLOR)
+        self._defaults = {
+            'color': kwargs.get('cell_color_default', DEFAULT_CELL_COLOR)
+        }
+
+        self._border_color = kwargs.get('border_color', DEFAULT_BORDER_COLOR)
 
         self._border_size = kwargs.get('border_size', DEFAULT_BORDER_SIZE)
 
@@ -47,13 +38,14 @@ class Grid(object):
         self._cell_width = cell_width
         self._cell_height = cell_height
 
-        self._dirty = []
         self._surf_cache = pygame.Surface(self._render_dimensions, pygame.SRCALPHA)
-        self.all.off()
+        self._init_surf_cache()
+        self._dirty = list(self)
 
-    def _index(self, pos):
-        x, y = pos
-        return x + self._columns * y
+    def _cell(self, pos):
+        if pos not in self._cells:
+            return None
+        return self._cells[pos]
 
     @property
     def _render_dimensions(self):
@@ -67,6 +59,10 @@ class Grid(object):
         y = self._border_size * (1 + y) + self._cell_height * y
         return (x, y, self._cell_width, self._cell_height)
 
+    def _init_surf_cache(self):
+        for pos in self:
+            self._draw_cell(self._surf_cache, pos)
+
     def _draw_cell(self, surface, pos):
         x, y = pos
         x *= (self._border_size + self._cell_width)
@@ -77,12 +73,12 @@ class Grid(object):
                 self._cell_width + 2 * self._border_size,
                 self._cell_height + 2 * self._border_size
                 )
-        rrect(surface, self._color_border, rect, 0, 0)
+        rrect(surface, self._border_color, rect, 0, 0)
 
         #Cell
         x += self._border_size
         y += self._border_size
-        color = self.get_color_at(pos)
+        color = self.get_attr_at('color', pos)
         rect = (x, y, self._cell_width, self._cell_height)
         rrect(surface, color, rect, self._cell_radius, 0)
 
@@ -117,26 +113,21 @@ class Grid(object):
     def all(self):
         return CellCollection(self, self)
 
-    def on(self, pos):
-        self.set_color_at(pos, self._color_cell_on)
-
-    def off(self, pos):
-        self.set_color_at(pos, self._color_cell_off)
-
-    def get_color_at(self, pos):
+    def get_attr_at(self, attr, pos):
         '''Gets the color at a position'''
-        pos = self._index(pos)
-        val = self._cells[pos]
-        if val:
-            return list(val)
-        return None
+        cell = self._cell(pos)
+        if not cell or attr not in cell:
+            return self._defaults.get(attr, None)
+        return list(cell[attr])
 
-    def set_color_at(self, pos, value):
+    def set_attr_at(self, attr, pos, value):
         '''Sets the color at a position'''
-        index = self._index(pos)
-        old_value = self.get_color_at(pos)
-        self._cells[index] = list(value)
-        if not old_value or not color_eq(value, old_value):
+        cell = self._cell(pos)
+        if cell is None:
+            self._cells[pos] = cell = {}
+        old_value = self.get_attr_at(attr, pos)
+        cell[attr] = list(value)
+        if old_value != value:
             self._dirty.append(pos)
 
     def __iter__(self):
