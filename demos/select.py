@@ -6,7 +6,7 @@ columns = 20
 cell_width = 25
 cell_height = 25
 COLOR_OFF = (000, 000, 255)
-COLOR_ON = (255, 255, 051)
+COLOR_ON = (255, 255, 51)
 
 args = [
     rows,
@@ -78,6 +78,7 @@ def update_selected(new_pos):
     grid[selected].color = COLOR_OFF
     selected = new_pos
     grid[selected].color = COLOR_ON
+    print grid[selected]
 
 while True:
     new_pos = None

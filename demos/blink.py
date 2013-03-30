@@ -50,6 +50,9 @@ while True:
     event = pygame.event.poll()
     if event.type == pygame.QUIT:
         break
+    elif event.type == pygame.KEYDOWN:
+        if event.key == pygame.K_ESCAPE:
+            break
 
     alpha += offset
     if alpha >= 256:
