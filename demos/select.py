@@ -3,8 +3,10 @@ from gritty.lib.grid import Grid
 
 rows = 20
 columns = 20
-cell_width = 20
-cell_height = 20
+cell_width = 25
+cell_height = 25
+COLOR_OFF = (000, 000, 255)
+COLOR_ON = (255, 255, 051)
 
 args = [
     rows,
@@ -14,11 +16,10 @@ args = [
 ]
 
 kwargs = {
-    'color_cell_on':  (255, 255, 051),
-    'color_cell_off': (000, 000, 255),
-    'color_border':   (000, 000, 000),
-    'border_size': 5,
-    'cell_radius': 0,
+    'cell_color_default': COLOR_OFF,
+    'border_color': (000, 000, 000),
+    'border_size': 3,
+    'cell_radius': 5,
 }
 
 grid = Grid(*args, **kwargs)
@@ -30,7 +31,7 @@ background_color = (255, 255, 255)
 
 
 selected = (rows/2, columns/2)
-grid.on(selected)
+grid[selected].color = COLOR_ON
 
 movement = {
     pygame.K_UP: [False, 0, -1],
@@ -54,6 +55,8 @@ def move():
         if toggle:
             ox += mox
             oy += moy
+    if ox == oy == 0:
+        return None
     return wrap(selected, (ox, oy))
 
 
@@ -72,9 +75,9 @@ def wrap((x, y), (ox, oy)):
 
 def update_selected(new_pos):
     global selected
-    grid.off(selected)
+    grid[selected].color = COLOR_OFF
     selected = new_pos
-    grid.on(selected)
+    grid[selected].color = COLOR_ON
 
 while True:
     new_pos = None
@@ -98,12 +101,9 @@ while True:
 
     new_pos = new_pos or move()
     if new_pos:
-        grid.off(selected)
-        selected = new_pos
-        grid.on(selected)
-        new_pos = None
+        update_selected(new_pos)
     pygame.display.update()
-    pygame.time.delay(20)
+    pygame.time.delay(40)
 
 
 pygame.quit()
