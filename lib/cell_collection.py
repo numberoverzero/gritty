@@ -1,59 +1,44 @@
-from gritty.padlib import rrect
 
 
 class Cell(object):
-    def __init__(self, grid, pos, attrs):
+    def __init__(self, grid, pos):
         self.grid = grid
         self.pos = pos
-        #This way setting default values won't inject the cell into the grid's cache
-        self._suppress_updates = True
-        for name, value in attrs.iteritems():
-            setattr(self, name, value)
-        self._suppress_updates = False
-
-    @property
-    def _rect(self):
-        '''Returns the (x, y, width, height) rectangle of the given cell'''
-        border_size = self.grid.cell_border_size
-        width = self.grid.cell_width
-        height = self.grid.cell_height
-        x, y = self.pos
-        x = border_size * (1 + x) + width * x
-        y = border_size * (1 + y) + height * y
-        return [x, y, width, height]
-
-    def draw(self, surface):
-        border_size = self.grid.cell_border_size
-        border_color = self.border_color
-
-        #Border
-        border_rect = self._rect
-        border_rect[0] -= border_size
-        border_rect[1] -= border_size
-        border_rect[2] += 2 * border_size
-        border_rect[3] += 2 * border_size
-        rrect(surface, border_color, border_rect, 0, 0)
-
-        #Cell
-        color = self.color
-        rect = self._rect
-        rrect(surface, color, rect, self.radius, 0)
 
     def __setattr__(self, name, value):
         if name == 'grid':
             object.__setattr__(self, name, value)
         elif name in self.grid.cell_attr:
+            if name in self.grid.cell_attr_coercion_funcs:
+                value = self.grid.cell_attr_coercion_funcs[name](value)
             object.__setattr__(self, name, value)
-            if not self._suppress_updates:
-                self.grid.update_cell(self)
+            self.grid.update_cell(self)
         else:
             object.__setattr__(self, name, value)
 
+    def __getattr__(self, name):
+        if name == 'grid':
+            return object.__getattr__(self, name)
+        elif name in self.grid.cell_attr:
+            try:
+                value = object.__getattr__(self, name)
+            except AttributeError:
+                value = self.grid.cell_attr[name]
+            if name in self.grid.cell_attr_coercion_funcs:
+                value = self.grid.cell_attr_coercion_funcs[name](value)
+            return value
+        else:
+            return object.__getattr__(self, name)
+
     def __str__(self):
-        return "Cell({}, {})".format(self.pos, self.color)
+        args = list(self.pos) + list(self.color)
+        return "Cell({}:{}, {}:{}:{}:{})".format(*args)
 
     def __repr__(self):
         return str(self)
+
+    def __iter__(self):
+        yield self
 
 
 class CellCollection(object):

@@ -1,5 +1,7 @@
 import itertools
 import pygame
+from gritty.padlib import rrect
+from gritty.lib import coerce_alpha
 from cell_collection import Cell, CellCollection
 from notify_dict import NotifiableDict
 
@@ -48,6 +50,9 @@ class Grid(object):
              }
         )
         self.cell_attr.set_notify_func(lambda *a, **kw: self.force_redraw())
+        self.cell_attr_coercion_funcs = {
+            'color': coerce_alpha
+        }
 
         self._cells = {}
         self._dirty = []
@@ -67,12 +72,29 @@ class Grid(object):
             self._forced_redraw = False
             self._dirty = []
             for cell in self:
-                cell.draw(self._surf_cache)
+                self._draw_cell(self._surf_cache, cell)
         elif self._dirty:
             for cell in self._dirty:
-                cell.draw(self._surf_cache)
+                self._draw_cell(self._surf_cache, cell)
             self._dirty = []
         return self._surf_cache
+
+    def _draw_cell(self, surface, cell):
+        border_size = self.cell_border_size
+        border_color = cell.border_color
+
+        #Border
+        border_rect = self.cell_rect(cell.pos)
+        border_rect[0] -= border_size
+        border_rect[1] -= border_size
+        border_rect[2] += 2 * border_size
+        border_rect[3] += 2 * border_size
+        rrect(surface, border_color, border_rect, 0, 0)
+
+        #Cell
+        color = cell.color
+        rect = self.cell_rect(cell.pos)
+        rrect(surface, color, rect, cell.radius, 0)
 
     @property
     def cell_width(self):
@@ -101,8 +123,12 @@ class Grid(object):
         self._cell_border_size = value
         self.force_redraw()
 
-    def hit_check(self, pos):
-        '''Returns the cell pos that contains pos, or None'''
+    def hit_check(self, pos, use_nearest=True):
+        '''
+        Returns the cell pos that contains pos.
+        If use_nearest, returns the closest pos to the target.
+        Otherwise, returns None when a cell is not exactly clicked.
+        '''
         grid_width, grid_height = self.render_dimensions
         pos_x, pos_y = pos
 
@@ -118,28 +144,38 @@ class Grid(object):
         x, rx = divmod(pos_x, cell_width + border)
         y, ry = divmod(pos_y, cell_height + border)
         if rx <= border or ry <= border:
-            return None
-        return x, y
+            if use_nearest:
+                if rx < border:
+                    x -= rx < border/2
+                if ry < border:
+                    y -= ry < border/2
+            else:
+                return None
+        return [x, y]
 
     def update_cell(self, cell):
         self._cells[cell.pos] = cell
         self._dirty.append(cell)
 
+    def reset(self):
+        self._cells = {}
+        self.force_redraw()
+
     def force_redraw(self):
         self._forced_redraw = True
 
     def cell_at(self, pos):
-        return self._cells.get(pos, Cell(self, pos, self.cell_attr))
+        return self._cells.get(pos, Cell(self, pos))
 
-    def set_cell_attr(self, name, value):
-        self._cell_attributes[name] = value
-        self.force_redraw()
-
-    def get_cell_attr(self, name):
-        return self._cell_attributes[name]
-
-    def has_cell_attr(self, name):
-        return name in self._cell_attributes
+    def cell_rect(self, pos):
+        '''Returns the (x, y, width, height) rectangle of the given cell'''
+        border_size = self.cell_border_size
+        width = self.cell_width
+        height = self.cell_height
+        x, y = pos
+        x = border_size * (1 + x) + width * x
+        y = border_size * (1 + y) + height * y
+        return [x, y, width, height]
 
     def __iter__(self):
         for revpos in itertools.product(range(self._rows), range(self._columns)):
@@ -156,4 +192,6 @@ class Grid(object):
             ys = [y]
         pairs = (pos[::-1] for pos in itertools.product(ys, xs))
         cells = map(self.cell_at, pairs)
+        if len(cells) == 1:
+            return cells[0]
         return CellCollection(self, cells)
