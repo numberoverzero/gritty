@@ -6,7 +6,7 @@
 # http://www.gnu.org/licenses/
 
 
-def coerce_alpha(input):
+def coerce_alpha(input, *args, **kwargs):
     '''Default to full opacity'''
     if len(input) == 3:
         input = list(input)

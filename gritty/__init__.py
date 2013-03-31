@@ -224,7 +224,7 @@ class Cell(object):
             object.__setattr__(self, name, value)
         elif name in self._grid.cell_attr:
             if name in self._grid.cell_attr_coercion_funcs:
-                value = self._grid.cell_attr_coercion_funcs[name](value)
+                value = self._grid.cell_attr_coercion_funcs[name](value, self)
             object.__setattr__(self, name, value)
             self._grid.update_cell(self)
         else:
@@ -239,7 +239,7 @@ class Cell(object):
             except AttributeError:
                 value = self._grid.cell_attr[name]
             if name in self._grid.cell_attr_coercion_funcs:
-                value = self._grid.cell_attr_coercion_funcs[name](value)
+                value = self._grid.cell_attr_coercion_funcs[name](value, self)
             return value
         else:
             return object.__getattr__(self, name)
@@ -312,6 +312,11 @@ class CellCollection(object):
 
     def __radd__(self, other):
         return CellCollection(self._grid, other) + self
+
+    def __iadd__(self, other):
+        positions = set([c.pos for c in self] + [c.pos for c in other])
+        self._cells = [self._grid.cell_at(pos) for pos in positions]
+        return self
 
     def __str__(self):
         return str(list(self))
