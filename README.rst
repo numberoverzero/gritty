@@ -48,6 +48,7 @@ and only redraws cells that have changed since the last time it was rendered.
 Grid Initialization
 ===================
 
+
 Grid has 4 required arguments - number of rows, number of columns, and cell width in pixels, and cell height in pixels.  Beyond that, you can specify values for cell color, cell border color, cell border size, and cell radius.  All of these are optional, and will use default settings as specified in ``Grid.__init__()``.  Note that these are a mix of grid properties and cell attribute defaults - see the following sections for more info on how to use each.
 
 From the previous section, "set up args and kwargs" may look something like this::
@@ -75,6 +76,8 @@ From the previous section, "set up args and kwargs" may look something like this
 
     pygame.init()
     grid = Grid(*args, **kwargs)
+
+Most of the above can be found in the ``basic_grid`` function in the demos folder, which sets up a basic grid for each demo.
 
 Cell Attributes
 ===================
