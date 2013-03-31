@@ -123,20 +123,25 @@ class Grid(object):
         self._cell_border_size = value
         self.force_redraw()
 
-    def hit_check(self, pos, use_nearest=True):
+    def hit_check(self, pos, use_nearest=True, clip_to_render=False):
         '''
         Returns the cell pos that contains pos.
         If use_nearest, returns the closest pos to the target.
         Otherwise, returns None when a cell is not exactly clicked.
+
+        If clip_to_render, returns None when the position is outside of the rendered area.
+        This setting has no effect when use_nearest is False.
         '''
         grid_width, grid_height = self.render_dimensions
         pos_x, pos_y = pos
 
         if pos_x < 0 or pos_y < 0:
-            return None
+            if clip_to_render or not use_nearest:
+                return None
 
         if pos_x > grid_width or pos_y > grid_height:
-            return None
+            if clip_to_render or not use_nearest:
+                return None
 
         cell_width, cell_height = self.cell_width, self.cell_height
         border = self.cell_border_size
@@ -183,11 +188,11 @@ class Grid(object):
 
     def __getitem__(self, (x, y)):
         if isinstance(x, slice):
-            xs = range(*x.indices(self._columns))
+            xs = range(x.start, x.stop, x.step)
         else:
             xs = [x]
         if isinstance(y, slice):
-            ys = range(*y.indices(self._rows))
+            ys = range(y.start, y.stop, y.step)
         else:
             ys = [y]
         pairs = (pos[::-1] for pos in itertools.product(ys, xs))
