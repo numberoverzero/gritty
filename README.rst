@@ -3,10 +3,24 @@ Gritty
 ===================
 
 Gritty is designed to provide an easy-to-use grid component, with
-reasonable performance for small grids (~ 100x100).  gritty supports
-custom cell attributes, including default values and coercion functions,
+reasonable performance for small grids (~ 100x100).
+
+Gritty supports custom cell attributes, including default values and coercion functions,
 and tries to provide an easy interface for manipulating multiple cells at once.
-Typical setup often looks like this::
+
+Try it out!
+----------------------------
+
+Import the multi-sect module and click and drag::
+
+    import gritty.demos.multi_select
+
+Simply import any of the other demos to see what gritty can do for you.
+
+
+Usage
+----------------------------
+Typical Grid setup often looks like this::
 
     #!/usr/bin/env python
 
@@ -25,7 +39,8 @@ Typical setup often looks like this::
         screen.blit(grid.surface, grid_pos)
 
 
-Note the ``grid.surface`` in the while loop: gritty caches the grid surface and only redraws cells that have changed since the last time it was rendered.
+Note the ``grid.surface`` in the while loop - gritty caches the grid surface,
+and only redraws cells that have changed since the last time it was rendered.
 
 
 Grid Initialization
