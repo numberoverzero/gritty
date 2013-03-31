@@ -1,5 +1,5 @@
 import pygame
-from gritty import Grid
+from gritty.demos import basic_grid
 
 # gritty demo
 # Copyright 2013 Joe Cross
@@ -7,36 +7,10 @@ from gritty import Grid
 # You are free to use, distribute, and modify pyGrid. If modification is your game,
 # it is recommended that you read the GNU LGPL license: http://www.gnu.org/licenses/
 
-rows = 20
-columns = 20
-cell_width = 25
-cell_height = 25
-COLOR_OFF = (000, 000, 255)
-COLOR_ON = (255, 255, 51)
+caption = "Left click or arrow keys to move"
+grid, display, COLOR_OFF, COLOR_ON = basic_grid(caption)
 
-args = [
-    rows,
-    columns,
-    cell_width,
-    cell_height
-]
-
-kwargs = {
-    'cell_color_default': COLOR_OFF,
-    'cell_border_color': (000, 000, 000),
-    'cell_border_size': 3,
-    'cell_radius': 5,
-}
-
-pygame.init()
-grid = Grid(*args, **kwargs)
-grid_pos = (0, 0)
-pygame.display.set_caption("Select example")
-screen = pygame.display.set_mode(grid.render_dimensions)
-background_color = (255, 255, 255)
-screen.fill(background_color)
-
-selected = (rows/2, columns/2)
+selected = (grid.rows/2, grid.columns/2)
 grid[selected].color = COLOR_ON
 
 movement = {
@@ -48,7 +22,7 @@ movement = {
 
 
 def draw_grid():
-    screen.blit(grid.surface, grid_pos)
+    display.get_surface().blit(grid.surface, (0, 0))
 
 
 def move():
@@ -64,14 +38,14 @@ def move():
 
 def wrap((x, y), (ox, oy)):
     new_pos = [x + ox, y + oy]
-    if new_pos[0] >= columns:
+    if new_pos[0] >= grid.columns:
         new_pos[0] = 0
     if new_pos[0] < 0:
-        new_pos[0] = columns - 1
-    if new_pos[1] >= rows:
+        new_pos[0] = grid.columns - 1
+    if new_pos[1] >= grid.rows:
         new_pos[1] = 0
     if new_pos[1] < 0:
-        new_pos[1] = rows - 1
+        new_pos[1] = grid.rows - 1
     return new_pos
 
 
