@@ -1,5 +1,5 @@
 import pygame
-from gritty.lib.grid import Grid
+from gritty import Grid
 
 rows = 45
 columns = 45

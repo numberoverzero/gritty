@@ -1,5 +1,5 @@
 import pygame
-from gritty.lib.grid import Grid
+from gritty import Grid
 
 rows = 9
 columns = 9
@@ -41,7 +41,7 @@ def draw_grid():
     screen.blit(grid.surface, grid_pos)
 
 alpha = 255
-offset = 1
+factor = 0.99
 while True:
     event = pygame.event.poll()
     if event.type == pygame.QUIT:
@@ -50,16 +50,16 @@ while True:
         if event.key == pygame.K_ESCAPE:
             break
 
-    alpha += offset
-    if alpha >= 256:
-        offset = -1
-        alpha = 255
-    if alpha <= 0:
-        offset = 1
-        alpha = 0
+    alpha *= factor
+    if alpha > 200:
+        factor = 0.9
+        alpha = 200
+    if alpha < 20:
+        factor = 1.1
+        alpha = 20
 
     color = list(COLOR_ON)
-    color[-1] = alpha
+    color[-1] = int(alpha)
     blink_selection.color = color
 
     clear()
