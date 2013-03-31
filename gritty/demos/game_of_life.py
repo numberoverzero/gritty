@@ -1,6 +1,6 @@
 import pygame
 import itertools
-from gritty import Grid, CellCollection
+from gritty.demos import basic_grid
 
 # gritty demo
 # Copyright 2013 Joe Cross
@@ -8,39 +8,32 @@ from gritty import Grid, CellCollection
 # You are free to use, distribute, and modify pyGrid. If modification is your game,
 # it is recommended that you read the GNU LGPL license: http://www.gnu.org/licenses/
 
-rows = 30
-columns = 30
-cell_width = 20
-cell_height = 20
-COLOR_OFF = (000, 000, 255)
-COLOR_ON = (255, 255, 51)
-
-args = [
-    rows,
-    columns,
-    cell_width,
-    cell_height
-]
-
-kwargs = {
-    'cell_color_default': COLOR_OFF,
-    'cell_border_color': (000, 000, 000),
-    'cell_border_size': 3,
-    'cell_radius': 0,
-}
-
-grid = Grid(*args, **kwargs)
-grid_pos = (0, 0)
-pygame.init()
-pygame.display.set_caption("Click and drag to select!")
-screen = pygame.display.set_mode(grid.render_dimensions)
-background_color = (255, 255, 255)
-screen.fill(background_color)
+grid, screen, COLOR_OFF, COLOR_ON = basic_grid()
 
 paused = True
+dimensions = grid.rows * grid.columns
+active_grid, buffer_grid = [False] * dimensions, [False] * dimensions
+index = lambda x, y: x + grid.columns * y
+initial = [
+    (11, 15),
+    (12, 15),
+    (12, 16),
+    (16, 16),
+    (17, 16),
+    (18, 16),
+    (17, 14),
+]
 
-# Initialize the grid used to calc the next iteration
-copy_grid = [False] * rows * columns
+
+def alive_to_color(value, cell):
+    cell.color = COLOR_ON if value else COLOR_OFF
+    return value
+
+grid.cell_attr['alive'] = False
+grid.cell_attr_coercion_funcs['alive'] = alive_to_color
+
+for x, y in initial:
+    grid[x, y].alive = active_grid[index(x, y)] = True
 
 
 def wrap(val, L1, L2):
@@ -50,52 +43,50 @@ def wrap(val, L1, L2):
     return ((val + nlow) % (high + nlow)) - nlow
 
 
-def update_cell_color(value, cell):
-    cell.color = COLOR_ON if value else COLOR_OFF
-    return value
-
-
-grid.cell_attr['alive'] = False
-grid.cell_attr_coercion_funcs['alive'] = update_cell_color
-
+cells = list(itertools.product(xrange(grid.rows), xrange(grid.columns)))
 offsets = list(itertools.product([-1, 0, 1], [-1, 0, 1]))
 offsets.remove((0, 0))
 
 
-def update_cell(pos):
-    global copy_grid
-    x, y = pos
-    neighbors = []
+def update_cell((x, y)):
+    global buffer_grid
+    count = 0
     for xo, yo in offsets:
-        neighbor_x = wrap(x + xo, 0, rows)
-        neighbor_y = wrap(y + yo, 0, columns)
-        neighbors.append((neighbor_x, neighbor_y))
-    count = sum(int(grid[pos].alive) for pos in neighbors)
-    if grid[pos].alive:
-        if count < 2:
-            copy_grid[x + columns * y] = False
-        elif count > 3:
-            copy_grid[x + columns * y] = False
+        nx = wrap(x + xo, 0, grid.rows)
+        ny = wrap(y + yo, 0, grid.columns)
+        count += active_grid[nx + grid.columns * ny]
+    alive = active_grid[index(x, y)]
+    if alive:
+        if count < 2 or count > 3:
+            buffer_grid[index(x, y)] = False
         else:
-            copy_grid[x + columns * y] = True
-    elif count == 3:
-        copy_grid[x + columns * y] = True
+            buffer_grid[index(x, y)] = True
+    else:
+        if count == 3:
+            buffer_grid[index(x, y)] = True
+        else:
+            buffer_grid[index(x, y)] = False
 
 
-def update_grid():
-    for x in range(columns):
-        for y in range(rows):
-            update_cell((x, y))
+def calculate_next_frame():
+    for x, y in cells:
+        update_cell((x, y))
+
+
+def flip_frames():
+    global buffer_grid, active_grid
+    tmp = active_grid
+    active_grid = buffer_grid
+    buffer_grid = tmp
 
 
 def apply_grid():
-    for x in range(columns):
-        for y in range(rows):
-            grid[x, y].alive = copy_grid[x + columns * y]
+    for x, y in cells:
+        grid[x, y].alive = active_grid[index(x, y)]
 
 
 def draw_grid():
-    screen.blit(grid.surface, grid_pos)
+    screen.blit(grid.surface, (0, 0))
 
 
 while True:
@@ -105,15 +96,18 @@ while True:
     elif event.type == pygame.KEYDOWN:
         if event.key == pygame.K_ESCAPE:
             break
-        elif event.key == pygame.K_p:
+        elif event.key == pygame.K_SPACE:
             paused = not paused
     elif event.type == pygame.MOUSEBUTTONDOWN:
         if event.button == 1:  # Left button only
             if paused:
-                cell = grid[grid.hit_check(pygame.mouse.get_pos())]
-                cell.alive = not cell.alive
+                x, y = grid.hit_check(pygame.mouse.get_pos())
+                active_grid[index(x, y)] = not active_grid[index(x, y)]
+                grid[x, y].alive = active_grid[index(x, y)]
+
     if not paused:
-        update_grid()
+        calculate_next_frame()
+        flip_frames()
         apply_grid()
 
     draw_grid()
