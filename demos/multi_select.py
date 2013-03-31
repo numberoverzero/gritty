@@ -30,11 +30,18 @@ screen = pygame.display.set_mode((800, 800))
 background_color = (255, 255, 255)
 
 is_dragging = False
+origin = None
 selection = None
 
 
-def calc_rect((x0, y0), (x1, y1)):
-    return min(x0, x1), max(x0, x1), min(y0, y1), max(y0, y1)
+def get_selection((x1, y1)):
+    if origin is None:
+        return None
+    xstep = 1 if origin[0] <= x1 else -1
+    ystep = 1 if origin[1] <= y1 else -1
+    xslice = slice(origin[0], x1+xstep, xstep)
+    yslice = slice(origin[1], y1+ystep, ystep)
+    return grid[xslice, yslice]
 
 
 def clear():
@@ -48,16 +55,16 @@ def draw_grid():
 def update_selection(new_selection):
     global selection
     if selection:
-        xmin, xmax, ymin, ymax = selection
-        grid[xmin:xmax+1, ymin:ymax+1].color = COLOR_OFF
+        to_clear = selection - new_selection
+        to_clear.color = COLOR_OFF
+        to_add = new_selection - to_clear
+        to_add.color = COLOR_ON
+    else:
+        new_selection.color = COLOR_ON
     selection = new_selection
-    if selection:
-        xmin, xmax, ymin, ymax = selection
-        grid[xmin:xmax+1, ymin:ymax+1].color = COLOR_ON
 
 
 while True:
-
     event = pygame.event.poll()
     if event.type == pygame.QUIT:
         break
@@ -65,14 +72,12 @@ while True:
         if event.key == pygame.K_ESCAPE:
             break
     elif event.type == pygame.MOUSEBUTTONDOWN:
-        if not is_dragging:
-            top_left = grid.hit_check(pygame.mouse.get_pos())
-            # Don't start dragging unless we've actually got a top left
-            if top_left:
-                is_dragging = True
-                x, y = top_left
-                new_selection = ((x, x, y, y))
-                update_selection(new_selection)
+        origin = grid.hit_check(pygame.mouse.get_pos())
+        # Don't start dragging unless we've actually got a top left
+        if origin:
+            new_selection = get_selection(origin)
+            update_selection(new_selection)
+            is_dragging = True
 
     elif event.type == pygame.MOUSEBUTTONUP:
         if is_dragging:
@@ -81,14 +86,8 @@ while True:
     if is_dragging:
         bottom_right = grid.hit_check(pygame.mouse.get_pos())
         if bottom_right:
-            # Basic selection - can't select backwards
-            if bottom_right[0] >= selection[0] or bottom_right[1] >= selection[2]:
-                if bottom_right[0] < selection[0]:
-                    bottom_right[0] = selection[0]
-                if bottom_right[1] < selection[2]:
-                    bottom_right[1] = selection[2]
-                new_selection = calc_rect((selection[0], selection[2]), bottom_right)
-                update_selection(new_selection)
+            new_selection = get_selection(bottom_right)
+            update_selection(new_selection)
 
     clear()
     draw_grid()
