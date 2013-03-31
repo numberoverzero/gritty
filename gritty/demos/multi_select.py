@@ -1,10 +1,16 @@
 import pygame
 from gritty import Grid
 
-rows = 45
-columns = 45
-cell_width = 12
-cell_height = 12
+# gritty demo
+# Copyright 2013 Joe Cross
+# This is free software, released under The GNU Lesser General Public License, version 3.
+# You are free to use, distribute, and modify pyGrid. If modification is your game,
+# it is recommended that you read the GNU LGPL license: http://www.gnu.org/licenses/
+
+rows = 20
+columns = 20
+cell_width = 30
+cell_height = 30
 COLOR_OFF = (000, 000, 255)
 COLOR_ON = (255, 255, 51)
 
@@ -18,8 +24,8 @@ args = [
 kwargs = {
     'cell_color_default': COLOR_OFF,
     'cell_border_color': (000, 000, 000),
-    'cell_border_size': 3,
-    'cell_radius': 5,
+    'cell_border_size': 8,
+    'cell_radius': 1,
 }
 
 grid = Grid(*args, **kwargs)

@@ -1,5 +1,16 @@
 import pygame
 
+# Copyright 2013 Joe Cross
+# This is free software, released under The GNU Lesser General Public License,
+# version 3.
+# You are free to use, distribute, and modify gritty. If modification is your
+# game, it is recommended that you read the GNU LGPL license:
+# http://www.gnu.org/licenses/
+#
+# This is a modified version of some functionality from the
+# Pygame Advanced Graphics Library,
+# by Ian Mallett: www.geometrian.com
+
 
 def circle(surface, color, point, radius, width):
     pygame.draw.circle(surface, color, point, radius, width)

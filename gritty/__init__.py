@@ -3,6 +3,20 @@ import pygame
 from padlib import rrect
 from lib import coerce_alpha, NotifiableDict
 
+# Copyright 2013 Joe Cross
+# This is free software, released under The GNU Lesser General Public License,
+# version 3.
+# You are free to use, distribute, and modify gritty. If modification is your
+# game, it is recommended that you read the GNU LGPL license:
+# http://www.gnu.org/licenses/
+#
+# gritty is a fork of pyGrid,
+# by Jordan Zanatta: https://github.com/GordonZed/pyGrid
+#
+# gritty uses a modified subset of the Pygame Advanced Graphics Library,
+# by Ian Mallett: www.geometrian.com
+
+
 DEFAULT_CELL_COLOR = (0, 0, 0, 255)
 DEFAULT_BORDER_COLOR = (0, 0, 0, 255)
 DEFAULT_BORDER_SIZE = 0

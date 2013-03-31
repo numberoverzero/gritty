@@ -1,12 +1,18 @@
 import pygame
 from gritty import Grid
 
-rows = 400
-columns = 400
-cell_width = 2
-cell_height = 2
-COLOR_OFF = (000, 000, 000)
-COLOR_ON = (255, 255, 255)
+# gritty demo
+# Copyright 2013 Joe Cross
+# This is free software, released under The GNU Lesser General Public License, version 3.
+# You are free to use, distribute, and modify pyGrid. If modification is your game,
+# it is recommended that you read the GNU LGPL license: http://www.gnu.org/licenses/
+
+rows = 20
+columns = 20
+cell_width = 25
+cell_height = 25
+COLOR_OFF = (000, 000, 255)
+COLOR_ON = (255, 255, 51)
 
 args = [
     rows,
@@ -18,18 +24,17 @@ args = [
 kwargs = {
     'cell_color_default': COLOR_OFF,
     'cell_border_color': (000, 000, 000),
-    'cell_border_size': 0,
-    'cell_radius': 0,
+    'cell_border_size': 3,
+    'cell_radius': 5,
 }
 
+pygame.init()
 grid = Grid(*args, **kwargs)
 grid_pos = (0, 0)
-pygame.init()
-pygame.display.set_caption("Large grid (400x400)")
+pygame.display.set_caption("Select example")
 screen = pygame.display.set_mode(grid.render_dimensions)
 background_color = (255, 255, 255)
 screen.fill(background_color)
-
 
 selected = (rows/2, columns/2)
 grid[selected].color = COLOR_ON
@@ -77,6 +82,7 @@ def update_selected(new_pos):
     grid[selected].color = COLOR_OFF
     selected = new_pos
     grid[selected].color = COLOR_ON
+    print grid[selected]
 
 while True:
     new_pos = None
@@ -92,12 +98,14 @@ while True:
     elif event.type == pygame.KEYUP:
         if event.key in movement:
             movement[event.key][0] = False
+    elif event.type == pygame.MOUSEBUTTONDOWN:
+        pos = pygame.mouse.get_pos()
+        new_pos = grid.hit_check(pos)
 
     update_selected(new_pos or move())
-
     draw_grid()
     pygame.display.update()
-    #pygame.time.delay(29)
+    pygame.time.delay(29)
 
 
 pygame.quit()
