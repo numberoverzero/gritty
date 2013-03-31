@@ -6,7 +6,7 @@ columns = 45
 cell_width = 12
 cell_height = 12
 COLOR_OFF = (000, 000, 255)
-COLOR_ON = (255, 255, 051)
+COLOR_ON = (255, 255, 51)
 
 args = [
     rows,
@@ -26,12 +26,17 @@ grid = Grid(*args, **kwargs)
 grid_pos = (0, 0)
 pygame.init()
 pygame.display.set_caption("Click and drag to select!")
-screen = pygame.display.set_mode((800, 800))
+screen = pygame.display.set_mode(grid.render_dimensions)
 background_color = (255, 255, 255)
+screen.fill(background_color)
 
 is_dragging = False
 origin = None
 selection = []
+
+
+def draw_grid():
+    screen.blit(grid.surface, grid_pos)
 
 
 def get_selection((x1, y1)):
@@ -42,14 +47,6 @@ def get_selection((x1, y1)):
     xslice = slice(origin[0], x1+xstep, xstep)
     yslice = slice(origin[1], y1+ystep, ystep)
     return grid[xslice, yslice]
-
-
-def clear():
-    screen.fill(background_color)
-
-
-def draw_grid():
-    screen.blit(grid.surface, grid_pos)
 
 
 def update_selection(new_selection):
@@ -90,7 +87,6 @@ while True:
                 new_selection = get_selection(bottom_right)
                 update_selection(new_selection)
 
-    clear()
     draw_grid()
     pygame.display.update()
     #pygame.time.delay(29)

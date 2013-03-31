@@ -5,8 +5,8 @@ rows = 400
 columns = 400
 cell_width = 2
 cell_height = 2
-COLOR_OFF = (000, 000, 255)
-COLOR_ON = (255, 255, 051)
+COLOR_OFF = (000, 000, 000)
+COLOR_ON = (255, 255, 255)
 
 args = [
     rows,
@@ -26,8 +26,9 @@ grid = Grid(*args, **kwargs)
 grid_pos = (0, 0)
 pygame.init()
 pygame.display.set_caption("Large grid (400x400)")
-screen = pygame.display.set_mode((800, 800))
+screen = pygame.display.set_mode(grid.render_dimensions)
 background_color = (255, 255, 255)
+screen.fill(background_color)
 
 
 selected = (rows/2, columns/2)
@@ -39,10 +40,6 @@ movement = {
     pygame.K_LEFT: [False, -1, 0],
     pygame.K_RIGHT: [False, 1, 0]
 }
-
-
-def clear():
-    screen.fill(background_color)
 
 
 def draw_grid():
@@ -75,14 +72,14 @@ def wrap((x, y), (ox, oy)):
 
 def update_selected(new_pos):
     global selected
+    if not new_pos:
+        return
     grid[selected].color = COLOR_OFF
     selected = new_pos
     grid[selected].color = COLOR_ON
 
 while True:
     new_pos = None
-    clear()
-    draw_grid()
 
     event = pygame.event.poll()
     if event.type == pygame.QUIT:
@@ -96,9 +93,9 @@ while True:
         if event.key in movement:
             movement[event.key][0] = False
 
-    new_pos = new_pos or move()
-    if new_pos:
-        update_selected(new_pos)
+    update_selected(new_pos or move())
+
+    draw_grid()
     pygame.display.update()
     #pygame.time.delay(29)
 

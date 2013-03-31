@@ -26,9 +26,9 @@ grid = Grid(*args, **kwargs)
 grid_pos = (0, 0)
 pygame.init()
 pygame.display.set_caption("Select example")
-screen = pygame.display.set_mode((800, 800))
+screen = pygame.display.set_mode(grid.render_dimensions)
 background_color = (255, 255, 255)
-
+screen.fill(background_color)
 
 selected = (rows/2, columns/2)
 grid[selected].color = COLOR_ON
@@ -39,10 +39,6 @@ movement = {
     pygame.K_LEFT: [False, -1, 0],
     pygame.K_RIGHT: [False, 1, 0]
 }
-
-
-def clear():
-    screen.fill(background_color)
 
 
 def draw_grid():
@@ -75,6 +71,8 @@ def wrap((x, y), (ox, oy)):
 
 def update_selected(new_pos):
     global selected
+    if not new_pos:
+        return
     grid[selected].color = COLOR_OFF
     selected = new_pos
     grid[selected].color = COLOR_ON
@@ -82,8 +80,6 @@ def update_selected(new_pos):
 
 while True:
     new_pos = None
-    clear()
-    draw_grid()
 
     event = pygame.event.poll()
     if event.type == pygame.QUIT:
@@ -100,9 +96,8 @@ while True:
         pos = pygame.mouse.get_pos()
         new_pos = grid.hit_check(pos)
 
-    new_pos = new_pos or move()
-    if new_pos:
-        update_selected(new_pos)
+    update_selected(new_pos or move())
+    draw_grid()
     pygame.display.update()
     pygame.time.delay(29)
 
