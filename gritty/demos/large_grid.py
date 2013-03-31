@@ -1,5 +1,5 @@
 import pygame
-from gritty import Grid
+from gritty.demos import basic_grid
 
 # gritty demo
 # Copyright 2013 Joe Cross
@@ -7,38 +7,31 @@ from gritty import Grid
 # You are free to use, distribute, and modify pyGrid. If modification is your game,
 # it is recommended that you read the GNU LGPL license: http://www.gnu.org/licenses/
 
-rows = 400
-columns = 400
-cell_width = 2
-cell_height = 2
-COLOR_OFF = (000, 000, 000)
+caption = "Large grid (400x400)"
+grid, display, COLOR_OFF, COLOR_ON = basic_grid(caption)
+
+# Reshape grid
+grid.rows = 400
+grid.columns = 400
+grid.cell_width = 2
+grid.cell_height = 2
+COLOR_OFF = [000, 000, 000]
 COLOR_ON = (255, 255, 255)
+grid.cell_attr['color'] = COLOR_OFF
+grid.cell_border_size = 0
 
-args = [
-    rows,
-    columns,
-    cell_width,
-    cell_height
-]
-
-kwargs = {
-    'cell_color_default': COLOR_OFF,
-    'cell_border_color': (000, 000, 000),
-    'cell_border_size': 0,
-    'cell_radius': 0,
-}
-
-grid = Grid(*args, **kwargs)
 grid_pos = (0, 0)
-pygame.init()
-pygame.display.set_caption("Large grid (400x400)")
-screen = pygame.display.set_mode(grid.render_dimensions)
-background_color = (255, 255, 255)
-screen.fill(background_color)
-
-
-selected = (rows/2, columns/2)
+selected = (grid.rows/2, grid.columns/2)
 grid[selected].color = COLOR_ON
+
+# Re-size the display to match the grid
+display.set_mode(grid.render_dimensions)
+
+# Pre-load surface, since first render takes some time
+print "Loading grid..."
+grid.surface
+print "Grid loaded!"
+
 
 movement = {
     pygame.K_UP: [False, 0, -1],
@@ -49,7 +42,7 @@ movement = {
 
 
 def draw_grid():
-    screen.blit(grid.surface, grid_pos)
+    display.get_surface().blit(grid.surface, grid_pos)
 
 
 def move():
@@ -65,14 +58,14 @@ def move():
 
 def wrap((x, y), (ox, oy)):
     new_pos = [x + ox, y + oy]
-    if new_pos[0] >= columns:
+    if new_pos[0] >= grid.columns:
         new_pos[0] = 0
     if new_pos[0] < 0:
-        new_pos[0] = columns - 1
-    if new_pos[1] >= rows:
+        new_pos[0] = grid.columns - 1
+    if new_pos[1] >= grid.rows:
         new_pos[1] = 0
     if new_pos[1] < 0:
-        new_pos[1] = rows - 1
+        new_pos[1] = grid.rows - 1
     return new_pos
 
 
@@ -98,6 +91,9 @@ while True:
     elif event.type == pygame.KEYUP:
         if event.key in movement:
             movement[event.key][0] = False
+    elif event.type == pygame.MOUSEBUTTONDOWN:
+        pos = pygame.mouse.get_pos()
+        new_pos = grid.hit_check(pos)
 
     update_selected(new_pos or move())
 
