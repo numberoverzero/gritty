@@ -36,4 +36,4 @@ def basic_grid(caption):
     screen = pygame.display.set_mode(grid.render_dimensions)
     background_color = (255, 255, 255)
     screen.fill(background_color)
-    return grid, screen, COLOR_OFF, COLOR_ON
+    return grid, pygame.display, COLOR_OFF, COLOR_ON

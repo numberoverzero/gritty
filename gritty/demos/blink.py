@@ -8,7 +8,7 @@ from gritty.demos import basic_grid
 # it is recommended that you read the GNU LGPL license: http://www.gnu.org/licenses/
 
 caption = "Blink example"
-grid, screen, COLOR_OFF, COLOR_ON = basic_grid(caption)
+grid, display, COLOR_OFF, COLOR_ON = basic_grid(caption)
 
 background_color = (255, 255, 255)
 blink_selection = grid[2:grid.rows:6, 2:grid.columns:6]
@@ -18,11 +18,11 @@ blink_selection = grid[2:grid.rows:6, 2:grid.columns:6]
 
 
 def clear():
-    screen.fill(background_color)
+    display.get_surface().fill(background_color)
 
 
 def draw_grid():
-    screen.blit(grid.surface, (0, 0))
+    display.get_surface().blit(grid.surface, (0, 0))
 
 alpha = 255
 factor = 0.99

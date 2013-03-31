@@ -9,7 +9,7 @@ from gritty.demos import basic_grid
 # it is recommended that you read the GNU LGPL license: http://www.gnu.org/licenses/
 
 caption = "Click to toggle, space to pause/resume"
-grid, screen, COLOR_OFF, COLOR_ON = basic_grid(caption)
+grid, display, COLOR_OFF, COLOR_ON = basic_grid(caption)
 
 paused = True
 dimensions = grid.rows * grid.columns
@@ -87,7 +87,7 @@ def apply_grid():
 
 
 def draw_grid():
-    screen.blit(grid.surface, (0, 0))
+    display.get_surface().blit(grid.surface, (0, 0))
 
 
 while True:
