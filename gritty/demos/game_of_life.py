@@ -8,7 +8,8 @@ from gritty.demos import basic_grid
 # You are free to use, distribute, and modify pyGrid. If modification is your game,
 # it is recommended that you read the GNU LGPL license: http://www.gnu.org/licenses/
 
-grid, screen, COLOR_OFF, COLOR_ON = basic_grid()
+caption = "Click to toggle, space to pause/resume"
+grid, screen, COLOR_OFF, COLOR_ON = basic_grid(caption)
 
 paused = True
 dimensions = grid.rows * grid.columns

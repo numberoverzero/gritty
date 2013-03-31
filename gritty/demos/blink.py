@@ -7,7 +7,8 @@ from gritty.demos import basic_grid
 # You are free to use, distribute, and modify pyGrid. If modification is your game,
 # it is recommended that you read the GNU LGPL license: http://www.gnu.org/licenses/
 
-grid, screen, COLOR_OFF, COLOR_ON = basic_grid()
+caption = "Blink example"
+grid, screen, COLOR_OFF, COLOR_ON = basic_grid(caption)
 
 background_color = (255, 255, 255)
 blink_selection = grid[2:grid.rows:6, 2:grid.columns:6]

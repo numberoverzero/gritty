@@ -8,7 +8,7 @@ from gritty import Grid
 # it is recommended that you read the GNU LGPL license: http://www.gnu.org/licenses/
 
 
-def basic_grid():
+def basic_grid(caption):
     rows = 41
     columns = 41
     cell_width = 20
@@ -32,7 +32,7 @@ def basic_grid():
 
     grid = Grid(*args, **kwargs)
     pygame.init()
-    pygame.display.set_caption("Click to toggle, space to pause/resume")
+    pygame.display.set_caption(caption)
     screen = pygame.display.set_mode(grid.render_dimensions)
     background_color = (255, 255, 255)
     screen.fill(background_color)
