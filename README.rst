@@ -2,6 +2,8 @@
 Gritty
 ===================
 
+*( Gritty is based on Jordan Zanatta's* |pyGrid|_ *)*
+
 Gritty is designed to provide an easy-to-use grid component, with
 reasonable performance for small grids (~ 100x100).
 
@@ -132,3 +134,6 @@ Grid properties are:
 
 * ``cell_border_size`` - thickness in pixels of the border between cells and around the grid
 
+.. _pyGrid: https://github.com/GordonZed/pyGrid
+
+.. |pyGrid| replace:: *pyGrid*
