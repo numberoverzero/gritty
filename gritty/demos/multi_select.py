@@ -1,5 +1,5 @@
 import pygame
-from gritty import Grid
+from gritty.demos import basic_grid
 
 # gritty demo
 # Copyright 2013 Joe Cross
@@ -7,34 +7,8 @@ from gritty import Grid
 # You are free to use, distribute, and modify pyGrid. If modification is your game,
 # it is recommended that you read the GNU LGPL license: http://www.gnu.org/licenses/
 
-rows = 20
-columns = 20
-cell_width = 30
-cell_height = 30
-COLOR_OFF = (000, 000, 255)
-COLOR_ON = (255, 255, 51)
-
-args = [
-    rows,
-    columns,
-    cell_width,
-    cell_height
-]
-
-kwargs = {
-    'cell_color_default': COLOR_OFF,
-    'cell_border_color': (000, 000, 000),
-    'cell_border_size': 8,
-    'cell_radius': 1,
-}
-
-grid = Grid(*args, **kwargs)
-grid_pos = (0, 0)
-pygame.init()
-pygame.display.set_caption("Click and drag to select!")
-screen = pygame.display.set_mode(grid.render_dimensions)
-background_color = (255, 255, 255)
-screen.fill(background_color)
+caption = "Click and drag to select!"
+grid, display, COLOR_OFF, COLOR_ON = basic_grid(caption)
 
 is_dragging = False
 origin = None
@@ -42,7 +16,7 @@ selection = []
 
 
 def draw_grid():
-    screen.blit(grid.surface, grid_pos)
+    display.get_surface().blit(grid.surface, (0, 0))
 
 
 def get_selection((x1, y1)):
