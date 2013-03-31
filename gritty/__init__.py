@@ -220,11 +220,11 @@ class Grid(object):
 
     def __getitem__(self, (x, y)):
         if isinstance(x, slice):
-            xs = range(x.start, x.stop, x.step)
+            xs = range(*x.indices(self.rows))
         else:
             xs = [x]
         if isinstance(y, slice):
-            ys = range(y.start, y.stop, y.step)
+            ys = range(*y.indices(self.rows))
         else:
             ys = [y]
         pairs = (pos[::-1] for pos in itertools.product(ys, xs))
