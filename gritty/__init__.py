@@ -109,6 +109,26 @@ class Grid(object):
         rrect(surface, color, rect, cell.radius, 0)
 
     @property
+    def rows(self):
+        return self._rows
+
+    @rows.setter
+    def rows(self, value):
+        self._rows = value
+        self.force_redraw()
+        # TODO: Delete cells outside the new bounds
+
+    @property
+    def columns(self):
+        return self._columns
+
+    @columns.setter
+    def columns(self, value):
+        self._columns = value
+        self.force_redraw()
+        # TODO: Delete cells outside the new bounds
+
+    @property
     def cell_width(self):
         return self._cell_width
 
@@ -223,10 +243,12 @@ class Cell(object):
         if name == '_grid':
             object.__setattr__(self, name, value)
         elif name in self._grid.cell_attr:
+            old_value = getattr(self, name)
             if name in self._grid.cell_attr_coercion_funcs:
                 value = self._grid.cell_attr_coercion_funcs[name](value, self)
             object.__setattr__(self, name, value)
-            self._grid.update_cell(self)
+            if old_value != value:
+                self._grid.update_cell(self)
         else:
             object.__setattr__(self, name, value)
 
