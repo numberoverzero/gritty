@@ -31,7 +31,7 @@ background_color = (255, 255, 255)
 
 is_dragging = False
 origin = None
-selection = None
+selection = []
 
 
 def get_selection((x1, y1)):
@@ -54,13 +54,15 @@ def draw_grid():
 
 def update_selection(new_selection):
     global selection
-    if selection:
-        to_clear = selection - new_selection
-        to_clear.color = COLOR_OFF
-        to_add = new_selection - to_clear
-        to_add.color = COLOR_ON
-    else:
-        new_selection.color = COLOR_ON
+    if selection == new_selection:
+        return
+
+    # Turn off cells in the old selection that aren't in the new selection
+    (selection - new_selection).color = COLOR_OFF
+
+    # Turn on cells in the new selection that aren't on in the old selection
+    (new_selection - selection).color = COLOR_ON
+
     selection = new_selection
 
 
@@ -72,22 +74,21 @@ while True:
         if event.key == pygame.K_ESCAPE:
             break
     elif event.type == pygame.MOUSEBUTTONDOWN:
-        origin = grid.hit_check(pygame.mouse.get_pos())
-        # Don't start dragging unless we've actually got a top left
-        if origin:
+        if event.button == 1:  # Left button only
+            origin = grid.hit_check(pygame.mouse.get_pos())
             new_selection = get_selection(origin)
             update_selection(new_selection)
             is_dragging = True
-
     elif event.type == pygame.MOUSEBUTTONUP:
+        if event.button == 1:  # Left button only
+            if is_dragging:
+                is_dragging = False
+    elif event.type == pygame.MOUSEMOTION:
         if is_dragging:
-            is_dragging = False
-
-    if is_dragging:
-        bottom_right = grid.hit_check(pygame.mouse.get_pos())
-        if bottom_right:
-            new_selection = get_selection(bottom_right)
-            update_selection(new_selection)
+            bottom_right = grid.hit_check(pygame.mouse.get_pos())
+            if bottom_right:
+                new_selection = get_selection(bottom_right)
+                update_selection(new_selection)
 
     clear()
     draw_grid()

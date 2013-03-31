@@ -40,11 +40,21 @@ class Cell(object):
     def __iter__(self):
         return iter([self])
 
+    @property
+    def _as_collection(self):
+        return CellCollection(self._grid, self)
+
     def __sub__(self, other):
-        return CellCollection(self._grid, self) - other
+        return self._as_collection - other
 
     def __add__(self, other):
-        return CellCollection(self._grid, self) - other
+        return self._as_collection - other
+
+    def __rsub__(self, other):
+        return other - self._as_collection
+
+    def __radd__(self, other):
+        return other + self._as_collection
 
 
 class CellCollection(object):
@@ -83,8 +93,17 @@ class CellCollection(object):
         cells = [self._grid.cell_at(pos) for pos in set(positions)]
         return CellCollection(self._grid, cells)
 
+    def __rsub__(self, other):
+        return CellCollection(self._grid, other) - self
+
+    def __radd__(self, other):
+        return CellCollection(self._grid, other) + self
+
     def __str__(self):
         return str(list(self))
 
     def __repr__(self):
         return str(self)
+
+    def __eq__(self, other):
+        return set(c.pos for c in self) == set(c.pos for c in other)
