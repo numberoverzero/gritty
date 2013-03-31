@@ -9,12 +9,12 @@ from gritty import Grid
 
 
 def basic_grid():
-    rows = 40
-    columns = 40
+    rows = 41
+    columns = 41
     cell_width = 20
     cell_height = 20
-    COLOR_OFF = (000, 000, 255)
-    COLOR_ON = (255, 255, 51)
+    COLOR_OFF = [000, 000, 255]
+    COLOR_ON = [255, 255, 51]
 
     args = [
         rows,
