@@ -9,10 +9,7 @@ import re
 
 def coerce_alpha(input, *args, **kwargs):
     '''Default to full opacity'''
-    if len(input) == 3:
-        input = list(input)
-        input.append(255)
-    return input
+    return Color(input)
 
 
 class NotifiableDict(dict):
@@ -36,24 +33,31 @@ class NotifiableDict(dict):
         self._notify_func(key, old_value, None)
 
 _rgba = 'rgba'
+_default_channels = [0, 0, 0, 255]
 _channel_search = re.compile('[^' + _rgba + ']').search
 _multi_channel = lambda name: len(name) > 1 and not bool(_channel_search(name))
 
 
 class Color(object):
-    __slots__ = ['r', 'g', 'b', 'a']
+    __slots__ = list(_rgba)
 
-    def __init__(self, r=0, g=0, b=0, a=255):
+    def __init__(self, *args, **kwargs):
+        if len(args) > 1 and len(kwargs) > 1:
+                raise TypeError("Cannot specify color using both positional and keyword arguments")
 
-        # This check allows us to load values from any iterable
-        if hasattr(r, '__iter__'):
-            # Set any channels not included
-            self[:] = 0, 0, 0, 255
-            # List so we can grab the length
-            colors = list(r)
+        # Set defaults
+        self[:] = _default_channels
+
+        if args:
+            # This check allows us to load values from any iterable
+            if len(args) == 1 and hasattr(args[0], '__iter__'):
+                args = args[0]
+            colors = list(args)
             self[:len(colors)] = colors
         else:
-            self[:] = r, g, b, a
+            for ch, v in kwargs.iteritems():
+                if ch in _rgba:
+                    setattr(self, ch, v)
 
     def __iter__(self):
         return iter(getattr(self, _rgba))
@@ -66,7 +70,7 @@ class Color(object):
 
     def __setitem__(self, index, value):
         if isinstance(index, slice):
-            index = range(*index.indices(4))
+            index = range(*index.indices(len(_rgba)))
         else:
             index = [index]
 
@@ -95,4 +99,4 @@ class Color(object):
         return repr(self)
 
     def __repr__(self):
-        return "Color({}, {}, {}, {})".format(*self)
+        return "Color({})".format(", ".join(str(ch) for ch in self))
