@@ -18,14 +18,28 @@ selection = []
 def draw_grid():
     display.get_surface().blit(grid.surface, (0, 0))
 
+constraints = (0, max(grid.rows, grid.columns))
+
+
+def constrain(value):
+    value = min(value, constraints[1])
+    value = max(value, constraints[0])
+    return value
+
+
+def minmax(pair):
+    min_ = constrain(min(pair))
+    max_ = constrain(max(pair))
+    return min_, max_
+
 
 def get_selection((x1, y1)):
     if origin is None:
         return None
-    xstep = 1 if origin[0] <= x1 else -1
-    ystep = 1 if origin[1] <= y1 else -1
-    xslice = slice(origin[0], x1+xstep, xstep)
-    yslice = slice(origin[1], y1+ystep, ystep)
+    xmin, xmax = minmax((x1, origin[0]))
+    ymin, ymax = minmax((y1, origin[1]))
+    xslice = slice(xmin, xmax+1, 1)
+    yslice = slice(ymin, ymax+1, 1)
     return grid[xslice, yslice]
 
 
