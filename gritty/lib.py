@@ -38,7 +38,6 @@ class NotifiableDict(dict):
 _rgba = 'rgba'
 _channel_search = re.compile('[^rgba]').search
 _multi_channel = lambda name: len(name) > 1 and not bool(_channel_search(name))
-_oga, _osa = object.__getattr__, object.__setattr__
 
 
 class Color(object):
@@ -64,17 +63,17 @@ class Color(object):
         func = lambda i: setattr(self, _rgba[i], value)
         map(func, indices)
 
-    def __getattr__(self, name):
+    def __getattr__(self, name, oga):
         if _multi_channel(name):
-            return list(_oga(self, ch) for ch in name)
-        return _oga(self, name)
+            return list(object.__getattr__(self, ch) for ch in name)
+        return object.__getattr__(self, name)
 
     def __setattr__(self, name, value):
         if _multi_channel(name):
-            func = lambda ch, v: _osa(self, ch, v)
+            func = lambda ch, v: object.__setattr__(self, ch, v)
             map(func, zip(name, value))
         else:
-            _osa(self, name, value)
+            object.__setattr__(self, name, value)
 
     def __str__(self):
         return repr(self)
