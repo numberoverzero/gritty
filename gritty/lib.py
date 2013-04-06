@@ -36,7 +36,7 @@ class NotifiableDict(dict):
         self._notify_func(key, old_value, None)
 
 _rgba = 'rgba'
-_channel_search = re.compile('[^rgba]').search
+_channel_search = re.compile('[^' + _rgba + ']').search
 _multi_channel = lambda name: len(name) > 1 and not bool(_channel_search(name))
 
 
@@ -44,33 +44,49 @@ class Color(object):
     __slots__ = ['r', 'g', 'b', 'a']
 
     def __init__(self, r=0, g=0, b=0, a=255):
-        self.r = r
-        self.g = g
-        self.b = b
-        self.a = a
+
+        # This check allows us to load values from any iterable
+        if hasattr(r, '__iter__'):
+            # Set any channels not included
+            self[:] = 0, 0, 0, 255
+            # List so we can grab the length
+            colors = list(r)
+            self[:len(colors)] = colors
+        else:
+            self[:] = r, g, b, a
 
     def __iter__(self):
-        return iter(self.rgba)
+        return iter(getattr(self, _rgba))
+
+    def __len__(self):
+        return len(getattr(self, _rgba))
 
     def __getitem__(self, index):
         return list(self)[index]
 
     def __setitem__(self, index, value):
         if isinstance(index, slice):
-            indices = range(*index.indices(4))
+            index = range(*index.indices(4))
         else:
-            indices = [index]
-        func = lambda i: setattr(self, _rgba[i], value)
-        map(func, indices)
+            index = [index]
 
-    def __getattr__(self, name, oga):
+        if hasattr(value, '__iter__'):
+            ni, nv = len(index), len(value)
+            if nv != ni:
+                raise AttributeError("Tried to set {} channels but passed {} values".format(ni, nv))
+        else:
+            value = [value]
+        func = lambda (i, v): setattr(self, _rgba[i], v)
+        map(func, zip(index, value))
+
+    def __getattr__(self, name):
         if _multi_channel(name):
-            return list(object.__getattr__(self, ch) for ch in name)
+            return list(getattr(self, ch) for ch in name)
         return object.__getattr__(self, name)
 
     def __setattr__(self, name, value):
         if _multi_channel(name):
-            func = lambda ch, v: object.__setattr__(self, ch, v)
+            func = lambda ch, v: setattr(self, ch, v)
             map(func, zip(name, value))
         else:
             object.__setattr__(self, name, value)
