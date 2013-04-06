@@ -92,21 +92,13 @@ class Grid(object):
         return self._surf_cache
 
     def _draw_cell(self, surface, cell):
-        border_size = self.cell_border_size
-        border_color = cell.border_color
+        rect = self.cell_rect(cell.pos)
 
         #Border
-        border_rect = self.cell_rect(cell.pos)
-        border_rect[0] -= border_size
-        border_rect[1] -= border_size
-        border_rect[2] += 2 * border_size
-        border_rect[3] += 2 * border_size
-        rrect(surface, border_color, border_rect, 0, 0)
+        rrect(surface, cell.border_color, rect, 0, self.cell_border_size)
 
         #Cell
-        color = cell.color
-        rect = self.cell_rect(cell.pos)
-        rrect(surface, color, rect, cell.radius, 0)
+        rrect(surface, cell.color, rect, cell.radius, 0)
 
     @property
     def rows(self):
