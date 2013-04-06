@@ -32,21 +32,21 @@ class NotifiableDict(dict):
         dict.__delitem__(self, key)
         self._notify_func(key, old_value, None)
 
-_rgba = 'rgba'
-_default_channels = [0, 0, 0, 255]
-_channel_search = re.compile('[^' + _rgba + ']').search
+_channels = 'rgba'
+_channel_defaults = [0, 0, 0, 255]
+_channel_search = re.compile('[^' + _channels + ']').search
 _multi_channel = lambda name: len(name) > 1 and not bool(_channel_search(name))
 
 
 class Color(object):
-    __slots__ = list(_rgba)
+    __slots__ = list(_channels)
 
     def __init__(self, *args, **kwargs):
         if len(args) > 1 and len(kwargs) > 1:
                 raise TypeError("Cannot specify color using both positional and keyword arguments")
 
         # Set defaults
-        self[:] = _default_channels
+        self[:] = _channel_defaults
 
         if args:
             # This check allows us to load values from any iterable
@@ -56,21 +56,21 @@ class Color(object):
             self[:len(colors)] = colors
         else:
             for ch, v in kwargs.iteritems():
-                if ch in _rgba:
+                if ch in _channels:
                     setattr(self, ch, v)
 
     def __iter__(self):
-        return iter(getattr(self, _rgba))
+        return iter(getattr(self, _channels))
 
     def __len__(self):
-        return len(getattr(self, _rgba))
+        return len(getattr(self, _channels))
 
     def __getitem__(self, index):
         return list(self)[index]
 
     def __setitem__(self, index, value):
         if isinstance(index, slice):
-            index = range(*index.indices(len(_rgba)))
+            index = range(*index.indices(len(_channels)))
         else:
             index = [index]
 
@@ -80,7 +80,7 @@ class Color(object):
                 raise AttributeError("Tried to set {} channels but passed {} values".format(ni, nv))
         else:
             value = [value]
-        func = lambda (i, v): setattr(self, _rgba[i], v)
+        func = lambda (i, v): setattr(self, _channels[i], v)
         map(func, zip(index, value))
 
     def __getattr__(self, name):
