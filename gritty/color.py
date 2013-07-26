@@ -1,43 +1,9 @@
-# Copyright 2013 Joe Cross
-# This is free software, released under The GNU Lesser General Public License,
-# version 3.
-# You are free to use, distribute, and modify gritty. If modification is your
-# game, it is recommended that you read the GNU LGPL license:
-# http://www.gnu.org/licenses/
 import re
-import collections
-
-
-def coerce_alpha(input, *args, **kwargs):
-    '''Default to full opacity'''
-    return Color(input)
-
-
-class NotifiableDict(dict):
-    def __init__(self, iterable=None, **kwargs):
-        iterable = iterable or []
-        dict.__init__(self, iterable, **kwargs)
-        self._notify_func = lambda *a, **kw: None
-
-    def set_notify_func(self, func):
-        '''func should take 3 arguments: key, old_value, new_value'''
-        self._notify_func = func
-
-    def __setitem__(self, key, value):
-        old_value = self.get(key, None)
-        dict.__setitem__(self, key, value)
-        self._notify_func(key, old_value, value)
-
-    def __delitem__(self, key):
-        old_value = self.get(key, None)
-        dict.__delitem__(self, key)
-        self._notify_func(key, old_value, None)
-
 
 CHANNELS = 'rgba'
 DEFAULT_COLORS = [0, 0, 0, 255]
 CHANNEL_SEARCH = re.compile('[^' + CHANNELS + ']').search
-IS_MULTI_CHANNEL = lambda name: name and not bool(CHANNEL_SEARCH(name))
+IS_MULTI_CHANNEL = lambda name: len(name) > 1 and not bool(CHANNEL_SEARCH(name))
 
 
 class Color(object):
@@ -58,8 +24,9 @@ class Color(object):
 
     def __init__(self, *args, **kwargs):
         self[:] = DEFAULT_COLORS
-
         if args:
+            if hasattr(args[0], '__iter__'):
+                args = args[0]
             self[:len(args)] = args
         else:
             for (ch, default) in zip(CHANNELS, DEFAULT_COLORS):
@@ -89,7 +56,7 @@ class Color(object):
 
     def __setattr__(self, name, value):
         if IS_MULTI_CHANNEL(name):
-            func = lambda ch, v: setattr(self, ch, v)
+            func = lambda (ch, v): setattr(self, ch, v)
             map(func, zip(name, value))
         else:
             object.__setattr__(self, name.lower(), value)
