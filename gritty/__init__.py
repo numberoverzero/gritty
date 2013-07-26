@@ -194,7 +194,11 @@ class Grid(object):
         self._forced_redraw = True
 
     def cell_at(self, pos):
-        return self._cells.get(pos, Cell(self, pos))
+        # This could just be self._cells.get(pos, ...)
+        # but that fully generates the cell, which includes a bunch of work.
+        if pos in self._cells:
+            return self._cells[pos]
+        return Cell(self, pos, Color(self.cell_default_color))
 
     def cell_rect(self, pos):
         '''Returns the (x, y, width, height) rectangle of the given cell'''
@@ -227,12 +231,12 @@ class Grid(object):
 
 
 class Cell(object):
-    __slots__ = ['_grid', '_pos', '_color']
+    __slots__ = ['_grid', 'pos', '_color']
 
-    def __init__(self, grid, pos, color=None):
+    def __init__(self, grid, pos, color):
         self._grid = grid
         self.pos = pos
-        self._color = color or self._grid.cell_default_color
+        self._color = color
 
     @property
     def color(self):

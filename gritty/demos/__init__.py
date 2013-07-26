@@ -1,5 +1,6 @@
 import pygame
 from gritty import Grid
+from gritty.color import Color
 
 
 def basic_grid(caption):
@@ -7,8 +8,8 @@ def basic_grid(caption):
     columns = 41
     cell_width = 20
     cell_height = 20
-    COLOR_OFF = [000, 000, 255]
-    COLOR_ON = [255, 255, 51]
+    COLOR_OFF = Color(b=255)
+    COLOR_ON = Color(255, 255, 51)
 
     args = [
         rows,
@@ -18,10 +19,13 @@ def basic_grid(caption):
     ]
 
     kwargs = {
-        'cell_color_default': COLOR_OFF,
-        'cell_border_color': (000, 000, 000),
-        'cell_border_size': 3,
         'cell_radius': 0,
+        'cell_border_size': 3,
+        'cell_border_color': Color(),
+        'cell_default_color': COLOR_OFF,
+
+
+
     }
 
     grid = Grid(*args, **kwargs)

@@ -1,6 +1,6 @@
 import pygame
 from gritty.demos import basic_grid
-
+from gritty.color import Color
 
 caption = "Large grid (400x400)"
 grid, display, COLOR_OFF, COLOR_ON = basic_grid(caption)
@@ -10,19 +10,23 @@ grid.rows = 400
 grid.columns = 400
 grid.cell_width = 2
 grid.cell_height = 2
-COLOR_OFF = [000, 000, 000]
-COLOR_ON = (255, 255, 255)
-grid.cell_attr['color'] = COLOR_OFF
 grid.cell_border_size = 0
+
+COLOR_OFF = Color()
+COLOR_ON = Color(255, 255, 255)
+
+# Repaint background black
+grid.cell_default_color = COLOR_OFF
+
 
 grid_pos = (0, 0)
 selected = (grid.rows/2, grid.columns/2)
 grid[selected].color = COLOR_ON
 
-# Re-size the display to match the grid
+# Resize the display to match the grid
 display.set_mode(grid.render_dimensions)
 
-# Pre-load surface, since first render takes some time
+# Preload surface, since first render takes some time
 print "Loading grid..."
 grid.surface
 print "Grid loaded!"
