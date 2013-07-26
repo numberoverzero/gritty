@@ -5,6 +5,7 @@
 # game, it is recommended that you read the GNU LGPL license:
 # http://www.gnu.org/licenses/
 import re
+import collections
 
 
 def coerce_alpha(input, *args, **kwargs):
@@ -32,68 +33,66 @@ class NotifiableDict(dict):
         dict.__delitem__(self, key)
         self._notify_func(key, old_value, None)
 
-_channels = 'rgba'
-_channel_defaults = [0, 0, 0, 255]
-_channel_search = re.compile('[^' + _channels + ']').search
-_multi_channel = lambda name: len(name) > 1 and not bool(_channel_search(name))
+
+CHANNELS = 'rgba'
+DEFAULT_COLORS = [0, 0, 0, 255]
+CHANNEL_SEARCH = re.compile('[^' + CHANNELS + ']').search
+IS_MULTI_CHANNEL = lambda name: name and not bool(CHANNEL_SEARCH(name))
 
 
 class Color(object):
-    __slots__ = list(_channels)
+    '''
+    Access color channels by index or value.
+    Full channel swizzling is supported, including setters
+
+    # Set rgba to (50, 100, 150, 200)
+    color = Color(50, 100, 150, 200)
+
+    # Flip red and green channels
+    color.rg = color.gr
+
+    # Add green to red (index order is rgba)
+    color[0] += color.g
+    '''
+    __slots__ = list(CHANNELS)
 
     def __init__(self, *args, **kwargs):
-        if len(args) > 1 and len(kwargs) > 1:
-                raise TypeError("Cannot specify color using both positional and keyword arguments")
-
-        # Set defaults
-        self[:] = _channel_defaults
+        self[:] = DEFAULT_COLORS
 
         if args:
-            # This check allows us to load values from any iterable
-            if len(args) == 1 and hasattr(args[0], '__iter__'):
-                args = args[0]
-            colors = list(args)
-            self[:len(colors)] = colors
+            self[:len(args)] = args
         else:
-            for ch, v in kwargs.iteritems():
-                if ch in _channels:
-                    setattr(self, ch, v)
+            for (ch, default) in zip(CHANNELS, DEFAULT_COLORS):
+                setattr(self, ch, kwargs.get(ch, default))
 
     def __iter__(self):
-        return iter(getattr(self, _channels))
+        return iter(getattr(self, CHANNELS))
 
     def __len__(self):
-        return len(getattr(self, _channels))
+        return len(CHANNELS)
 
     def __getitem__(self, index):
-        return list(self)[index]
+        return getattr(self, CHANNELS[index])
 
     def __setitem__(self, index, value):
         if isinstance(index, slice):
-            index = range(*index.indices(len(_channels)))
+            index = range(*index.indices(len(CHANNELS)))
+            func = lambda (i, v): setattr(self, CHANNELS[i], v)
+            map(func, zip(index, value))
         else:
-            index = [index]
-
-        if hasattr(value, '__iter__'):
-            ni, nv = len(index), len(value)
-            if nv != ni:
-                raise AttributeError("Tried to set {} channels but passed {} values".format(ni, nv))
-        else:
-            value = [value]
-        func = lambda (i, v): setattr(self, _channels[i], v)
-        map(func, zip(index, value))
+            setattr(self, CHANNELS[index], value)
 
     def __getattr__(self, name):
-        if _multi_channel(name):
+        if IS_MULTI_CHANNEL(name):
             return list(getattr(self, ch) for ch in name)
         return object.__getattr__(self, name)
 
     def __setattr__(self, name, value):
-        if _multi_channel(name):
+        if IS_MULTI_CHANNEL(name):
             func = lambda ch, v: setattr(self, ch, v)
             map(func, zip(name, value))
         else:
-            object.__setattr__(self, name, value)
+            object.__setattr__(self, name.lower(), value)
 
     def __str__(self):
         return repr(self)
