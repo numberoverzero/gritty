@@ -1,24 +1,10 @@
 import itertools
 import pygame
 from padlib import rrect
-from lib import coerce_alpha, NotifiableDict
+from gritty.color import Color
 
-# Copyright 2013 Joe Cross
-# This is free software, released under The GNU Lesser General Public License,
-# version 3.
-# You are free to use, distribute, and modify gritty. If modification is your
-# game, it is recommended that you read the GNU LGPL license:
-# http://www.gnu.org/licenses/
-#
-# gritty is a fork of pyGrid,
-# by Jordan Zanatta: https://github.com/GordonZed/pyGrid
-#
-# gritty uses a modified subset of the Pygame Advanced Graphics Library,
-# by Ian Mallett: www.geometrian.com
-
-
-DEFAULT_CELL_COLOR = (0, 0, 0, 255)
-DEFAULT_BORDER_COLOR = (0, 0, 0, 255)
+DEFAULT_CELL_COLOR = Color()
+DEFAULT_BORDER_COLOR = Color(255, 255, 255, 255)
 DEFAULT_BORDER_SIZE = 0
 DEFAULT_CELL_RADIUS = 0
 
@@ -29,47 +15,32 @@ class Grid(object):
         rows:: the number of rows in the grid
         columns:: the number of columns in the grid
 
-        keyword arguments are split into Global attributes and Cell attributes.
-
-        Global attributes are features applicable to the grid as a whole, or apply to every cell.
-        Adding, removing, or updating global attributes will force a redraw of the grid.
-
-        Cell attributes are features whose value can change per-cell.
-        Adding, removing, or updating a cell attribute will force a redraw of that cell.
-        Changing a cell attribute default will force a redraw of the grid.
-
-        GLOBAL
         cell_width         :: width in pixels of a cell
         cell_height        :: height in pixels of a cell
-        cell_border_size   :: thickness in pixels of the border
 
-        CELL
-        cell_color_default :: default color a cell is rendered with
         cell_radius        :: curvature of the cell corners.  Use 0 for square corners
-        border_color       :: border color for the grid (exterior edges and border between cells)
+        cell_border_size   :: thickness in pixels of the border
+        cell_border_color  :: border color for the grid (exterior edges and border between cells)
+        cell_default_color :: default colorof a cell (this value is used when calling cell.off)
+
+        Updating any of these attributes will force a redraw of the entire grid.
         '''
+
         self._rows = rows
         self._columns = columns
 
         self._cell_width = cell_width
         self._cell_height = cell_height
-        self._cell_border_size = kwargs.get('cell_border_size', DEFAULT_BORDER_SIZE)
 
-        self.cell_attr = NotifiableDict(
-            {'color': kwargs.get('cell_color_default', DEFAULT_CELL_COLOR),
-             'radius': kwargs.get('cell_radius', DEFAULT_CELL_RADIUS),
-             'border_color': kwargs.get('cell_border_color', DEFAULT_BORDER_COLOR)
-             }
-        )
-        self.cell_attr.set_notify_func(lambda *a, **kw: self.force_redraw())
-        self.cell_attr_coercion_funcs = {
-            'color': coerce_alpha
-        }
+        self._cell_radius = kwargs.get('cell_radius', DEFAULT_CELL_RADIUS)
+        self._cell_border_size = kwargs.get('cell_border_size', DEFAULT_BORDER_SIZE)
+        self._cell_border_color = kwargs.get('cell_border_color', DEFAULT_BORDER_COLOR)
+        self._cell_default_color = kwargs.get('cell_default_color', DEFAULT_CELL_COLOR)
 
         self._cells = {}
         self._dirty = []
         self.force_redraw()
-        self.surface
+        self.surface  # Accessing the surface to cache it
 
     @property
     def render_dimensions(self):
@@ -81,24 +52,26 @@ class Grid(object):
     def surface(self):
         if self._forced_redraw:
             self._surf_cache = pygame.Surface(self.render_dimensions, pygame.SRCALPHA)
-            self._forced_redraw = False
-            self._dirty = []
-            for cell in self:
-                self._draw_cell(self._surf_cache, cell)
+            dirty = self
         elif self._dirty:
-            for cell in self._dirty:
-                self._draw_cell(self._surf_cache, cell)
-            self._dirty = []
+            dirty = self._dirty
+        else:
+            dirty = []
+
+        map(lambda c: self._draw_cell(c), dirty)
+        self._forced_redraw = False
+        self._dirty = []
         return self._surf_cache
 
-    def _draw_cell(self, surface, cell):
+    def _draw_cell(self, cell, surface=None):
+        surface = surface or self._surf_cache
         rect = self.cell_rect(cell.pos)
 
         #Border
-        rrect(surface, cell.border_color, rect, 0, self.cell_border_size)
+        rrect(surface, self._cell_border_color, rect, 0, self.cell_border_size)
 
         #Cell
-        rrect(surface, cell.color, rect, cell.radius, 0)
+        rrect(surface, cell.color, rect, self._cell_radius, 0)
 
     @property
     def rows(self):
@@ -139,12 +112,39 @@ class Grid(object):
         self.force_redraw()
 
     @property
+    def cell_radius(self):
+        return self._cell_radius
+
+    @cell_radius.setter
+    def cell_radius(self, value):
+        self._cell_radius = value
+        self.force_redraw()
+
+    @property
     def cell_border_size(self):
         return self._cell_border_size
 
     @cell_border_size.setter
     def cell_border_size(self, value):
         self._cell_border_size = value
+        self.force_redraw()
+
+    @property
+    def cell_border_color(self):
+        return self._cell_border_color
+
+    @cell_border_color.setter
+    def cell_border_color(self, value):
+        self._cell_border_color = value
+        self.force_redraw()
+
+    @property
+    def cell_default_color(self):
+        return self._cell_default_color
+
+    @cell_default_color.setter
+    def cell_default_color(self, value):
+        self._cell_default_color = value
         self.force_redraw()
 
     def hit_check(self, pos, use_nearest=True, clip_to_render=False):
@@ -227,40 +227,24 @@ class Grid(object):
 
 
 class Cell(object):
-    def __init__(self, grid, pos):
+    __slots__ = ['_grid', '_pos', '_color']
+
+    def __init__(self, grid, pos, color=None):
         self._grid = grid
         self.pos = pos
+        self._color = color or self._grid.cell_default_color
 
-    def __setattr__(self, name, value):
-        if name == '_grid':
-            object.__setattr__(self, name, value)
-        elif name in self._grid.cell_attr:
-            old_value = getattr(self, name)
-            if name in self._grid.cell_attr_coercion_funcs:
-                value = self._grid.cell_attr_coercion_funcs[name](value, self)
-            object.__setattr__(self, name, value)
-            if old_value != value:
-                self._grid.update_cell(self)
-        else:
-            object.__setattr__(self, name, value)
+    @property
+    def color(self):
+        return self._color
 
-    def __getattr__(self, name):
-        if name == '_grid':
-            return object.__getattr__(self, name)
-        elif name in self._grid.cell_attr:
-            try:
-                value = object.__getattr__(self, name)
-            except AttributeError:
-                value = self._grid.cell_attr[name]
-            if name in self._grid.cell_attr_coercion_funcs:
-                value = self._grid.cell_attr_coercion_funcs[name](value, self)
-            return value
-        else:
-            return object.__getattr__(self, name)
+    @color.setter
+    def color(self, value):
+        self._color = value
+        self._grid.update_cell(self)
 
     def __str__(self):
-        args = list(self.pos) + list(self.color)
-        return "Cell({}:{}, {}:{}:{}:{})".format(*args)
+        return "Cell({}, [{}, {}], {})".format(self._grid, self.pos[0], self.pos[1], self.color)
 
     def __repr__(self):
         return str(self)
