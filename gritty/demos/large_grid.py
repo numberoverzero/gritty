@@ -1,11 +1,6 @@
 import pygame
 from gritty.demos import basic_grid
 
-# gritty demo
-# Copyright 2013 Joe Cross
-# This is free software, released under The GNU Lesser General Public License, version 3.
-# You are free to use, distribute, and modify pyGrid. If modification is your game,
-# it is recommended that you read the GNU LGPL license: http://www.gnu.org/licenses/
 
 caption = "Large grid (400x400)"
 grid, display, COLOR_OFF, COLOR_ON = basic_grid(caption)

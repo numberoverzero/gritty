@@ -1,12 +1,6 @@
 import pygame
 from gritty import Grid
 
-# gritty demo
-# Copyright 2013 Joe Cross
-# This is free software, released under The GNU Lesser General Public License, version 3.
-# You are free to use, distribute, and modify pyGrid. If modification is your game,
-# it is recommended that you read the GNU LGPL license: http://www.gnu.org/licenses/
-
 
 def basic_grid(caption):
     rows = 41
