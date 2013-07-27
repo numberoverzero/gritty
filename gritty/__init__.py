@@ -231,12 +231,16 @@ class Grid(object):
 
 
 class Cell(object):
-    __slots__ = ['_grid', 'pos', '_color']
+    __slots__ = ['_grid', '_pos', '_color']
 
     def __init__(self, grid, pos, color):
         self._grid = grid
-        self.pos = pos
+        self._pos = pos
         self._color = color
+
+    @property
+    def pos(self):
+        return list(self._pos)
 
     @property
     def color(self):
@@ -276,10 +280,7 @@ class Cell(object):
 class CellCollection(object):
     def __init__(self, grid, cells=None):
         self._grid = grid
-        if cells:
-            self._cells = cells
-        else:
-            self._cells = []
+        self._cells = cells or []
 
     def __getattr__(self, name):
         if name in ['_grid', '_cells']:
