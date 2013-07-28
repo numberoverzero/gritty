@@ -3,7 +3,7 @@ import pygame
 from padlib import rrect
 from gritty.color import Color
 
-DEFAULT_CELL_COLOR = Color()
+DEFAULT_CELL_COLOR = Color(0, 0, 0, 255)
 DEFAULT_BORDER_COLOR = Color(255, 255, 255, 255)
 DEFAULT_BORDER_SIZE = 0
 DEFAULT_CELL_RADIUS = 0
